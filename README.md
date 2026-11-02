@@ -69,7 +69,7 @@ Do these tasks. Write what you find in `notes/RULES.md`.
 
 1. **Practice 2, strings.** Find the messages the program prints. Find one long string of letters that is not a message. What could it be?
 2. **Practice 2, hex.** Find that string in the hex view. Note its offset (left column).
-3. **Practice 3, hex.** The strings view hides text shorter than 4 characters. In the hex view, look at the text column just before `Z.incor`. Find one capital letter there. (The `Z` is not part of the text. Python puts a marker byte such as `Z` or `Ú` in front of each short string.) What could the letter be?
+3. **Practice 3, hex.** The strings view hides text shorter than 4 characters. In the hex view, look at the text column just before `Z.incor`. Find one capital letter there. (The `Z` is not part of the text. Python puts a marker byte (often `Z`) in front of each short string.) What could the letter be?
 4. **Practice 3, hex.** Python stores a small whole number as the byte `69` or `e9`, then the number in 4 bytes, **lowest byte first**. Example: 10 is `e9 0a 00 00 00`. Find the stored numbers near the word `incorrect`. Convert one to decimal:
    `python3 -c "print(int.from_bytes(bytes.fromhex('0a000000'), 'little', signed=True))"`
 5. **Then decompile.** Do the values you found match the code? Mark them **C** in your rules sheet.
