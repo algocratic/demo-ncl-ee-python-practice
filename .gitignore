@@ -1,0 +1,6 @@
+# Python caches. Do NOT add *.pyc here: the practice files are .pyc files.
+__pycache__/
+
+# Gym challenge files. NCL rules do not allow posting them online.
+gym/*
+!gym/README.md

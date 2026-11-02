@@ -1,0 +1,13 @@
+{
+  "name": "NCL E&E Python practice",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "postCreateCommand": "pip install -r requirements.txt && python3 check_setup.py",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    },
+    "codespaces": {
+      "openFiles": ["README.md"]
+    }
+  }
+}
