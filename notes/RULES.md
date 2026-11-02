@@ -4,6 +4,13 @@ Fill in one block for each challenge. Use **C** for a rule that you read in the 
 
 ## Challenge: ____________
 
+**Before decompiling, I saw (strings and hex):**
+
+| Value | Offset | What I think it is |
+|---|---|---|
+| | | |
+| | | |
+
 | # | Rule the input must pass | C or R |
 |---|---|---|
 | 1 | | |

@@ -24,11 +24,12 @@ Every line must say `OK`. If a line says `FIX`, do what it says, then run the ch
 
 ## 3. The method (use it on every challenge)
 
-1. **READ.** Get code that you can read. A `.py` file is already readable. For a `.pyc` file, decompile it:
+1. **LOOK.** Before you decompile, look at the raw bytes. Text and numbers in the program are often visible. See "Look before you decompile" below.
+2. **READ.** Get code that you can read. A `.py` file is already readable. For a `.pyc` file, decompile it:
    `uncompyle6 practice2.pyc > practice2_src.py`
-2. **LIST THE RULES.** Write each check that the input must pass, one per line. Use `notes/RULES.md`.
-3. **REVERSE.** Start at the target value. Undo each step in the opposite order.
-4. **RUN.** Test your answer. Mark each rule **C** (read in the code) or **R** (seen when you ran it). Do not guess. The code decides.
+3. **LIST THE RULES.** Write each check that the input must pass, one per line. Use `notes/RULES.md`.
+4. **REVERSE.** Start at the target value. Undo each step in the opposite order.
+5. **RUN.** Test your answer. Mark each rule **C** (read in the code) or **R** (seen when you ran it). Do not guess. The code decides.
 
 ## 4. Do the practice, in order
 
@@ -36,7 +37,12 @@ Every line must say `OK`. If a line says `FIX`, do what it says, then run the ch
 cd practice
 python3 warmup.py
 python3 practice1.py YOURGUESS
+
+python3 ../tools/hexview.py --strings practice2.pyc
+python3 ../tools/hexview.py practice2.pyc
 uncompyle6 practice2.pyc > practice2_src.py
+
+python3 ../tools/hexview.py practice3.pyc
 uncompyle6 practice3.pyc > practice3_src.py
 ```
 
@@ -49,7 +55,28 @@ uncompyle6 practice3.pyc > practice3_src.py
 
 To test a practice 2 or 3 answer, run your decompiled file: `python3 practice2_src.py YOURANSWER`. If it stops responding, press `Ctrl+C` and read the second note below. Finding that problem is part of practice 2.
 
-## 5. Do the gym challenges
+## 5. Look before you decompile
+
+A `.pyc` file is not secret. It is compiled, not encrypted. The text and the numbers in the program are stored in the file as they are.
+
+| Tool | Command | What it shows |
+|---|---|---|
+| Strings | `python3 ../tools/hexview.py --strings FILE` | Runs of readable text: messages, stored values, names of functions and variables. |
+| Hex view | `python3 ../tools/hexview.py FILE` | Every byte, in hex (middle) and as text (right). Numbers show here, not in strings. |
+| Native (Mac, Linux, Codespaces) | `strings FILE`, `od -A x -c FILE`, `hexdump -C FILE` | The same views. Some systems do not have all three. `hexview.py` works everywhere. |
+
+Do these tasks. Write what you find in `notes/RULES.md`.
+
+1. **Practice 2, strings.** Find the messages the program prints. Find one long string of letters that is not a message. What could it be?
+2. **Practice 2, hex.** Find that string in the hex view. Note its offset (left column).
+3. **Practice 3, strings.** Find the one-letter string. What could it be?
+4. **Practice 3, hex.** Python stores a small whole number as the byte `69` or `e9`, then the number in 4 bytes, **lowest byte first**. Example: 10 is `e9 0a 00 00 00`. Find the stored numbers near the word `incorrect`. Convert one to decimal:
+   `python3 -c "print(int.from_bytes(bytes.fromhex('0a000000'), 'little', signed=True))"`
+5. **Then decompile.** Do the values you found match the code? Mark them **C** in your rules sheet.
+
+**What the bytes cannot tell you:** the order of the steps, and what the program does with each value. The decompiler shows that.
+
+## 6. Do the gym challenges
 
 Download the gym files into the `gym/` folder. **Do not commit them.** NCL rules do not allow anyone to post gym challenges online. Git ignores that folder for you.
 
