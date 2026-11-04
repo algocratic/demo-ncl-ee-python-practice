@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bytecode Bench</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Offline practice stations for NCL Enumeration & Exploitation: Python 1-3.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@600&display=swap">
+<style>
+/* Layout: a workbench. One narrow column of numbered stations that follow the method (LOOK, READ, LIST, REVERSE, RUN).
+   Palette: blueprint slate with a hex-editor selection amber. */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --ink:#18212b; --muted:#5a6878; --line:#cfd7e0;
+  --accent:#1f5f99; --hl:#ffd27a; --hl-ink:#3a2a00; --ok:#1d7a46; --bad:#b3362b; --code-bg:#f5f7fa;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161c; --panel:#18202a; --ink:#e3e9ef; --muted:#93a1b0; --line:#2c3846;
+  --accent:#7db5e8; --hl:#7a5a12; --hl-ink:#ffe6b0; --ok:#5cc98a; --bad:#f08276; --code-bg:#0f141a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161c; --panel:#18202a; --ink:#e3e9ef; --muted:#93a1b0; --line:#2c3846;
+  --accent:#7db5e8; --hl:#7a5a12; --hl-ink:#ffe6b0; --ok:#5cc98a; --bad:#f08276; --code-bg:#0f141a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:960px;margin:0 auto;display:grid;gap:20px}
+header h1{font:600 clamp(28px,5vw,40px)/1.1 var(--f-display);letter-spacing:.01em;margin:0;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--muted);max-width:65ch}
+nav{display:flex;flex-wrap:wrap;gap:6px}
+nav a{font:600 13px var(--f-mono);color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--panel);padding:4px 10px;border-radius:4px}
+nav a:hover,nav a:focus-visible{border-color:var(--accent)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;display:grid;gap:12px;min-width:0}
+.step{font:600 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h2{font:600 22px/1.2 var(--f-display);margin:0;text-wrap:balance}
+p{margin:0;max-width:70ch}
+.muted{color:var(--muted)}
+label{font-size:13px;color:var(--muted);display:grid;gap:4px}
+input,select,button{font:14px var(--f-mono);color:var(--ink);background:var(--code-bg);border:1px solid var(--line);border-radius:4px;padding:7px 9px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button{cursor:pointer;background:var(--panel)}
+button.primary{background:var(--accent);color:var(--panel);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.row>label{flex:1 1 160px;min-width:0}
+code,.mono{font-family:var(--f-mono)}
+.scroll{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;font:13px var(--f-mono);font-variant-numeric:tabular-nums}
+td,th{border:1px solid var(--line);padding:3px 7px;text-align:center}
+th{color:var(--muted);font-weight:400;text-align:left}
+.rules{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.rules li{display:flex;gap:10px;align-items:baseline;font:14px var(--f-mono)}
+.pill{font:600 11px var(--f-mono);padding:1px 7px;border-radius:10px;border:1px solid currentColor;min-width:44px;text-align:center}
+.pass{color:var(--ok)} .fail{color:var(--bad)}
+.verdict{font:600 16px var(--f-mono)}
+.hex{font:13px/1.6 var(--f-mono);background:var(--code-bg);border:1px solid var(--line);border-radius:4px;padding:8px 10px;white-space:pre;max-height:420px;overflow:auto}
+.hex .b{cursor:pointer;border-radius:2px}
+.hex .b:hover{outline:1px solid var(--accent)}
+.hex .on{background:var(--hl);color:var(--hl-ink)}
+.hex .off{color:var(--muted)}
+.info{font:13px var(--f-mono);min-height:1.6em}
+.chain{display:grid;gap:6px;font:14px var(--f-mono)}
+.chain div{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chain .v{background:var(--code-bg);border:1px solid var(--line);border-radius:4px;padding:2px 8px}
+.chain .op{color:var(--accent);font-weight:600}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.cols>div{min-width:0;display:grid;gap:8px;align-content:start}
+footer{color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:no-preference){.pill,.verdict{transition:color .15s}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Bytecode Bench</h1>
+  <p>Practice stations for NCL Enumeration &amp; Exploitation, Python 1&ndash;3. Everything runs in this page. No network is needed. The files here are practice files, not gym challenges.</p>
+</header>
+
+<nav aria-label="Stations">
+  <a href="#chars">1 Characters</a><a href="#look">2 Look</a><a href="#rules">3 Rules</a><a href="#shift">4 Shift</a><a href="#undo">5 Undo</a>
+</nav>
+
+<!-- 1 -->
+<section id="chars">
+  <div class="step">Station 1 &middot; Warm-up</div>
+  <h2>Characters are numbers</h2>
+  <p>Python's <code>ord()</code> turns a character into a number. <code>chr()</code> turns it back. Type a word and watch the running total. Python 1 checks a total like this.</p>
+  <div class="row">
+    <label for="chIn">Text<input id="chIn" value="cyber" maxlength="40" autocomplete="off"></label>
+    <label for="chrIn" style="flex:0 1 140px">chr( number )<input id="chrIn" type="number" value="83" min="32" max="126"></label>
+  </div>
+  <div class="scroll"><table id="chTable"></table></div>
+  <div class="info" id="chrOut"></div>
+</section>
+
+<!-- 2 -->
+<section id="look">
+  <div class="step">Station 2 &middot; Look</div>
+  <h2>Look at the bytes before you decompile</h2>
+  <p>A <code>.pyc</code> file is compiled, not encrypted. Its text and numbers are in the file as they are. Click a byte to see what it is. Use <b>Find</b> to search for text or for a whole number.</p>
+  <div class="row">
+    <label for="fileSel">File<select id="fileSel"><option value="p2">practice2.pyc</option><option value="p3">practice3.pyc</option><option value="own">Open my own file&hellip;</option></select></label>
+    <label for="viewSel">View<select id="viewSel"><option value="hex">Hex (like hexdump -C)</option><option value="str">Strings (like strings)</option></select></label>
+    <label for="findIn">Find text or a number<input id="findIn" placeholder="incorrect  or  11" autocomplete="off"></label>
+    <input id="ownFile" type="file" hidden>
+  </div>
+  <div class="info" id="byteInfo">Click any byte.</div>
+  <div class="hex" id="hexOut" tabindex="0" aria-label="Byte view"></div>
+  <p class="muted">Python stores a small whole number as the byte <code>69</code> or <code>e9</code>, then 4 bytes, lowest byte first. So 11 is <code>e9 0b 00 00 00</code>. Find shows every place a number's 4 bytes appear.</p>
+</section>
+
+<!-- 3 -->
+<section id="rules">
+  <div class="step">Station 3 &middot; List the rules</div>
+  <h2>The Locker: pass every rule</h2>
+  <p>This is the check in <code>practice1.py</code>. Each rule lights up when your input passes it. Use the helper to see how much of the total is left.</p>
+  <pre class="hex" style="max-height:none">if total == 800 and len(password) == 8 and ord(password[3]) == 75:
+    print("correct")</pre>
+  <div class="row"><label for="lockIn">Password<input id="lockIn" value="aaaaaaaa" maxlength="20" autocomplete="off"></label></div>
+  <ul class="rules" id="lockRules"></ul>
+  <div class="verdict" id="lockVerdict"></div>
+  <div class="info muted" id="lockHelp"></div>
+</section>
+
+<!-- 4 -->
+<section id="shift">
+  <div class="step">Station 4 &middot; Reverse a shift</div>
+  <h2>Shift letters forward and back</h2>
+  <p>Python 2 adds a fixed amount to each letter and wraps past <code>z</code>. To undo it, shift the other way by the same amount. Find the amount in the code or the bytes first.</p>
+  <div class="row">
+    <label for="shIn">Text (a&ndash;z)<input id="shIn" value="cyberleague" autocomplete="off"></label>
+    <label for="shAmt" style="flex:0 1 200px">Shift amount: <span id="shAmtOut" class="mono">5</span><input id="shAmt" type="range" min="-25" max="25" value="5"></label>
+  </div>
+  <div class="scroll"><table id="shTable"></table></div>
+  <div class="info" id="shOut"></div>
+</section>
+
+<!-- 5 -->
+<section id="undo">
+  <div class="step">Station 5 &middot; Reverse bit operations</div>
+  <h2>The Undo Machine</h2>
+  <p>Python 3 runs a number through shift, XOR and NOT. Each step has an inverse. Undo the <b>last</b> step <b>first</b>. This page uses Python's rules for whole numbers, so <code>~x</code> is <code>-(x + 1)</code>.</p>
+  <div class="cols">
+    <div>
+      <div class="row">
+        <label for="uStart">Start number<input id="uStart" value="100" autocomplete="off"></label>
+      </div>
+      <div class="row">
+        <label for="uOp" style="flex:0 1 120px">Step<select id="uOp"><option value="shl">x &lt;&lt; n</option><option value="xor">x ^ k</option><option value="not">~x</option><option value="add">x + n</option></select></label>
+        <label for="uArg" style="flex:0 1 140px">n or k<input id="uArg" value="2" autocomplete="off"></label>
+        <button id="uAdd" type="button">Add step</button>
+        <button id="uClear" type="button">Clear</button>
+      </div>
+      <div class="step">Forward</div>
+      <div class="chain" id="uFwd"></div>
+    </div>
+    <div>
+      <div class="step">Backward (reverse order)</div>
+      <div class="chain" id="uBack"></div>
+      <div class="verdict" id="uVerdict"></div>
+    </div>
+  </div>
+</section>
+
+<footer>Offline copy: open <code>web/index.html</code> from your clone of the practice template. Then try each technique on the real files with <code>tools/hexview.py</code> and <code>uncompyle6</code>.</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const show = c => (c >= 32 && c < 127) ? String.fromCharCode(c) : ".";
+
+/* ---------- 1 Characters ---------- */
+function drawChars(){
+  const s = $("chIn").value;
+  let total = 0, r1 = "<tr><th>char</th>", r2 = "<tr><th>ord</th>", r3 = "<tr><th>total</th>", r0 = "<tr><th>index</th>";
+  [...s].forEach((ch, i) => { const o = ch.codePointAt(0); total += o;
+    r0 += `<td>${i}</td>`; r1 += `<td>${esc(ch === " " ? "␠" : ch)}</td>`; r2 += `<td>${o}</td>`; r3 += `<td>${total}</td>`; });
+  $("chTable").innerHTML = r0 + "</tr>" + r1 + "</tr>" + r2 + "</tr>" + r3 + "</tr>";
+  const n = parseInt($("chrIn").value, 10);
+  $("chrOut").textContent = Number.isFinite(n) && n >= 32 && n <= 126 ? `chr(${n}) = '${String.fromCharCode(n)}'` : "Type a number from 32 to 126.";
+}
+$("chIn").addEventListener("input", drawChars); $("chrIn").addEventListener("input", drawChars);
+
+/* ---------- 2 Look ---------- */
+const FILES = {
+  p2: { name: "practice2.pyc", b64: "VQ0NCgAAAABe0OhqXAIAAOMAAAAAAAAAAAAAAAAAAAAAAgAAAEAAAABzGgAAAGQAZAFsAFoAZAJkA4QAWgFlAYMAAQBkAVMAKQTpAAAAAE5jAAAAAAAAAAAAAAAABAAAAAMAAABDAAAAc6oAAAB0AHQBagKDAWQBawNyGnQDZAKDAQEAZABTAHQBagJkAxkAfQBkBH0BdAB8AIMBdAB8AYMBawNyRHQDZAWDAQEAZABTAGQGfQJ8AnQAfACDAWsAcp50BHwAfAIZAIMBZAcXAH0DfAN0BGQIgwFrBHJ4fANkCRgAfQN0BXwDgwF8AXwCGQBrA3KUdANkBYMBAQBkAFMAfAJkAxcAfQJxSHQDZAqDAQEAZABTACkLTukCAAAAeiB1c2FnZTogcHl0aG9uMyBwcmFjdGljZTIucHljIEtFWekBAAAAWhhvcG56eGF0d3BjZGxjcGp6ZmNxY3RweW9aCWluY29ycmVjdHIBAAAA6QsAAADaAXrpGgAAAFoHY29ycmVjdCkG2gNsZW7aA3N5c9oEYXJndtoFcHJpbnTaA29yZNoDY2hyKQTaA2tleVoEdmFsc9oBadoBbqkAchAAAAD6DHByYWN0aWNlMi5wedoEbWFpbgYAAABzJAAAAAABDgEIAQQCCgEEAhABCAEEAgQBDAEQAQwBCAEQAQgBBAEKAnISAAAAKQJyCAAAAHISAAAAchAAAAByEAAAAHIQAAAAchEAAADaCDxtb2R1bGU+AwAAAHMEAAAACAMIGQ==" },
+  p3: { name: "practice3.pyc", b64: "VQ0NCgAAAABl0OhqbgIAAOMAAAAAAAAAAAAAAAAAAAAAAgAAAEAAAABzGgAAAGQAZAFsAFoAZAJkA4QAWgFlAYMAAQBkAVMAKQTpAAAAAE5jAAAAAAAAAAAAAAAAAwAAAAQAAABDAAAAc5oAAAB0AHQBagKDAWQBawNyGnQDZAKDAQEAZABTAHQEdAFqAmQDGQCDAX0AdAB8AIMBZARrA3NAfABkBRkAZAZrA3JMdANkB4MBAQBkAFMAZAV9AXwARABdEH0CfAF0BXwCgwEXAH0BcVR8AWQIPgB9AXwBZAlBAH0BfAEPAH0BfAFkCmsCco50A2QLgwEBAG4IdANkB4MBAQBkAFMAKQxO6QIAAAB6JXVzYWdlOiBweXRob24zIHByYWN0aWNlMy5weWMgUEFTU1dPUkTpAQAAAOkKAAAAcgEAAADaAVFaCWluY29ycmVjdOkDAAAAaQ3wrQtp2ixS9FoHY29ycmVjdCkG2gNsZW7aA3N5c9oEYXJndtoFcHJpbnTaBGxpc3TaA29yZCkDWghwYXNzd29yZFoHYnVpbGRlctoBY6kAcg4AAAD6DHByYWN0aWNlMy5wedoEbWFpbgYAAABzIAAAAAABDgEIAQQCDgEYAQgBBAIEAQgBDgIIAQgBBgIIAQoCchAAAAApAnIIAAAAchAAAAByDgAAAHIOAAAAcg4AAAByDwAAANoIPG1vZHVsZT4DAAAAcwQAAAAIAwgY" },
+};
+let bytes = new Uint8Array(0), marks = new Set();
+function fromB64(b){ const s = atob(b); const a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+function hex2(n){ return n.toString(16).padStart(2, "0"); }
+
+function findMarks(q){
+  marks = new Set(); q = q.trim(); if (!q) return "";
+  let pats = [];
+  if (/^-?\d+$/.test(q)) {
+    const v = BigInt(q);
+    if (v < -2147483648n || v > 2147483647n) return "Use a number from -2147483648 to 2147483647.";
+    const dv = new DataView(new ArrayBuffer(4)); dv.setInt32(0, Number(v), true);
+    pats.push([...new Uint8Array(dv.buffer)]);
+  }
+  pats.push([...new TextEncoder().encode(q)]);
+  let hits = 0;
+  for (const p of pats) for (let i = 0; i + p.length <= bytes.length; i++) {
+    let ok = true; for (let j = 0; j < p.length; j++) if (bytes[i + j] !== p[j]) { ok = false; break; }
+    if (ok) { hits++; for (let j = 0; j < p.length; j++) marks.add(i + j); }
+  }
+  const asBytes = /^-?\d+$/.test(q) ? ` (as 4 bytes: ${pats[0].map(hex2).join(" ")})` : "";
+  return hits ? `Found ${hits} match${hits > 1 ? "es" : ""} for ${q}${asBytes}.` : `No match for ${q}${asBytes}.`;
+}
+
+function drawBytes(){
+  const msg = findMarks($("findIn").value);
+  const out = $("hexOut");
+  if ($("viewSel").value === "str") {
+    let lines = [], run = "", start = 0;
+    for (let i = 0; i <= bytes.length; i++) {
+      const c = i < bytes.length ? bytes[i] : 0;
+      if (c >= 32 && c < 127) { if (!run) start = i; run += String.fromCharCode(c); }
+      else { if (run.length >= 4) lines.push(`<span class="off">${start.toString(16).padStart(8, "0")}</span>  ${esc(run)}`); run = ""; }
+    }
+    out.innerHTML = lines.join("\n") || "No text runs of 4 or more characters.";
+  } else {
+    let html = "";
+    for (let off = 0; off < bytes.length; off += 16) {
+      let h = "", t = "";
+      for (let j = 0; j < 16; j++) {
+        const i = off + j;
+        if (i < bytes.length) {
+          const cls = "b" + (marks.has(i) ? " on" : "");
+          h += `<span class="${cls}" data-i="${i}">${hex2(bytes[i])}</span>` + (j === 7 ? "  " : " ");
+          t += `<span class="${cls}" data-i="${i}">${esc(show(bytes[i]))}</span>`;
+        } else { h += "   " + (j === 7 ? " " : ""); }
+      }
+      html += `<span class="off">${off.toString(16).padStart(8, "0")}</span>  ${h} |${t}|\n`;
+    }
+    out.innerHTML = html;
+  }
+  $("byteInfo").textContent = msg || "Click any byte.";
+}
+
+$("hexOut").addEventListener("click", e => {
+  const el = e.target.closest("[data-i]"); if (!el) return;
+  const i = +el.dataset.i, b = bytes[i];
+  let s = `offset ${i.toString(16).padStart(8, "0")}: byte ${hex2(b)} = ${b} = '${show(b)}'`;
+  if ((b === 0x69 || b === 0xe9) && i + 4 < bytes.length) {
+    const dv = new DataView(bytes.buffer, bytes.byteOffset + i + 1, 4);
+    s += `   ->  if this marks a whole number, the next 4 bytes give ${dv.getInt32(0, true)}`;
+  }
+  $("byteInfo").textContent = s;
+});
+
+function loadFile(key){
+  if (key === "own") { $("ownFile").click(); return; }
+  bytes = fromB64(FILES[key].b64); drawBytes();
+}
+$("fileSel").addEventListener("change", e => loadFile(e.target.value));
+$("ownFile").addEventListener("change", e => {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > 2_000_000) { $("byteInfo").textContent = "That file is over 2 MB. Pick a smaller file."; return; }
+  const r = new FileReader();
+  r.onload = () => { bytes = new Uint8Array(r.result); drawBytes(); $("byteInfo").textContent = `Opened ${f.name} (${f.size} bytes). It stays in your browser.`; };
+  r.readAsArrayBuffer(f);
+});
+$("viewSel").addEventListener("change", drawBytes);
+$("findIn").addEventListener("input", drawBytes);
+
+/* ---------- 3 Rules ---------- */
+function drawLock(){
+  const p = $("lockIn").value, codes = [...p].map(c => c.codePointAt(0));
+  const total = codes.reduce((a, b) => a + b, 0);
+  const rules = [
+    [`len(password) == 8`, p.length === 8, `length is ${p.length}`],
+    [`ord(password[3]) == 75`, codes[3] === 75, codes.length > 3 ? `password[3] is '${p[3]}' = ${codes[3]}` : "there is no password[3] yet"],
+    [`total == 800`, total === 800, `total is ${total}`],
+  ];
+  $("lockRules").innerHTML = rules.map(([r, ok, why]) =>
+    `<li><span class="pill ${ok ? "pass" : "fail"}">${ok ? "PASS" : "FAIL"}</span><span>${esc(r)}</span><span class="muted">${esc(why)}</span></li>`).join("");
+  const all = rules.every(r => r[1]);
+  $("lockVerdict").innerHTML = `Program prints: <span class="${all ? "pass" : "fail"}">${all ? "correct" : "incorrect"}</span>`;
+  const left = 800 - total;
+  $("lockHelp").textContent = `Helper: ${left >= 0 ? left + " left to add" : (-left) + " too much"} to reach 800. Remember: Python counts positions from 0, so password[3] is the 4th character.`;
+}
+$("lockIn").addEventListener("input", drawLock);
+
+/* ---------- 4 Shift ---------- */
+function drawShift(){
+  const amt = parseInt($("shAmt").value, 10); $("shAmtOut").textContent = amt;
+  const s = $("shIn").value.toLowerCase();
+  let out = "", r1 = "<tr><th>in</th>", r2 = "<tr><th>ord</th>", r3 = "<tr><th>+ shift</th>", r4 = "<tr><th>out</th>";
+  for (const ch of s) {
+    const o = ch.charCodeAt(0);
+    if (o < 97 || o > 122) { out += ch; continue; }
+    const n = ((o - 97 + amt) % 26 + 26) % 26 + 97;
+    out += String.fromCharCode(n);
+    r1 += `<td>${esc(ch)}</td>`; r2 += `<td>${o}</td>`; r3 += `<td>${n}</td>`; r4 += `<td>${String.fromCharCode(n)}</td>`;
+  }
+  $("shTable").innerHTML = r1 + "</tr>" + r2 + "</tr>" + r3 + "</tr>" + r4 + "</tr>";
+  $("shOut").textContent = `Result: ${out}    (to undo, set the amount to ${-amt})`;
+}
+$("shIn").addEventListener("input", drawShift); $("shAmt").addEventListener("input", drawShift);
+
+/* ---------- 5 Undo ---------- */
+let steps = [["shl", 2n], ["xor", 999n], ["not", 0n]];
+const fwd = { shl: (x, n) => x << n, xor: (x, k) => x ^ k, not: x => ~x, add: (x, n) => x + n };
+const inv = { shl: (x, n) => x >> n, xor: (x, k) => x ^ k, not: x => ~x, add: (x, n) => x - n };
+const fname = { shl: (n) => `<< ${n}`, xor: (k) => `^ ${k}`, not: () => `~`, add: (n) => `+ ${n}` };
+const iname = { shl: (n) => `>> ${n}`, xor: (k) => `^ ${k}`, not: () => `~`, add: (n) => `- ${n}` };
+function big(s){ s = String(s).trim(); try { return /^-?(0x[0-9a-f]+|\d+)$/i.test(s) ? (s.startsWith("-") ? -BigInt(s.slice(1)) : BigInt(s)) : null; } catch { return null; } }
+function drawUndo(){
+  const start = big($("uStart").value);
+  if (start === null) { $("uFwd").textContent = "Type a whole number (decimal, or hex like 0xBADF00D)."; $("uBack").textContent = ""; $("uVerdict").textContent = ""; return; }
+  let x = start, f = `<div><span class="v">${x}</span> start</div>`;
+  for (const [op, a] of steps) { x = fwd[op](x, a); f += `<div><span class="op">${esc(fname[op](a))}</span> &rarr; <span class="v">${x}</span></div>`; }
+  $("uFwd").innerHTML = f + `<div class="muted">Target: ${x}</div>`;
+  let y = x, b = `<div><span class="v">${y}</span> target</div>`;
+  for (const [op, a] of [...steps].reverse()) { y = inv[op](y, a); b += `<div>undo <span class="op">${esc(fname[op](a))}</span> with <span class="op">${esc(iname[op](a))}</span> &rarr; <span class="v">${y}</span></div>`; }
+  $("uBack").innerHTML = b;
+  const ok = y === start;
+  $("uVerdict").innerHTML = ok ? `<span class="pass">Back to the start: ${y}</span>`
+    : `<span class="fail">Got ${y}, not ${start}.</span>`;
+}
+$("uAdd").addEventListener("click", () => {
+  const op = $("uOp").value, a = op === "not" ? 0n : big($("uArg").value);
+  if (a === null || (op === "shl" && (a < 0n || a > 64n))) { $("uVerdict").textContent = op === "shl" ? "Use a shift from 0 to 64." : "Type a whole number for n or k."; return; }
+  steps.push([op, a]); drawUndo();
+});
+$("uClear").addEventListener("click", () => { steps = []; drawUndo(); });
+$("uStart").addEventListener("input", drawUndo);
+$("uOp").addEventListener("change", () => { $("uArg").disabled = $("uOp").value === "not"; });
+
+/* ---------- boot ---------- */
+drawChars(); loadFile("p2"); drawLock(); drawShift(); drawUndo();
+</script>
+
+</body>
+</html>

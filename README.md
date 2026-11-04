@@ -14,6 +14,8 @@ On this repo's GitHub page, click **Use this template → Open in a codespace**.
 2. Clone your copy, then open a terminal in its folder.
 3. Type `pip install -r requirements.txt` (on Windows, `py -m pip install -r requirements.txt`).
 
+**C. No network, or no Python yet.** Open `web/index.html` in any browser. It runs with no network and no installs. It has five practice stations: character codes, a byte viewer for the practice `.pyc` files, the practice 1 rules, a letter-shift lab, and a bit-operation undo machine.
+
 ## 2. Check your setup
 
 ```
